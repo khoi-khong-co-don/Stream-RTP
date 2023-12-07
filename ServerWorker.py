@@ -28,10 +28,12 @@ class ServerWorker:
 	IPP2P = ""
 	PORTP2P = 0
 
-	HOST = '192.168.111.93'
+	HOST = '192.168.111.90'
 	# HOST = '192.168.43.25'
 
 	PORT = 12345
+
+	connected = False
 
 	
 	def __init__(self, clientInfo):
@@ -44,8 +46,9 @@ class ServerWorker:
 	def recvRtspRequest(self):
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		self.sock.bind((self.HOST, self.PORT))
-		self.sock.sendto(b'lo', ('103.151.241.66',55555))
+		self.sock.sendto(b'server', ('103.151.241.66',55554))
 		print("Day la Client A")
+
 		data, addr = self.sock.recvfrom(1024)
 		print(data, addr)
 		data_str = data.decode('utf-8')
@@ -53,51 +56,58 @@ class ServerWorker:
 		self.IPP2P, self.PORTP2P = data_list[0], data_list[1]
 		print("Dia chi cua Client B la: ", self.IPP2P, self.PORTP2P)
 		while True:
-			self.sock.sendto(b'connect', (self.IPP2P, self.PORTP2P))
+			self.sock.sendto(b'connect to RTP client', (self.IPP2P, self.PORTP2P))
 			data1, addr1 = self.sock.recvfrom(1024)
-			data1 = data1.decode('utf-8')
-			if data1.find('turn')>=0:
+			data1_str = data1.decode('utf-8')
+			if data1_str.find('turn')>=0:
 				break
-			if data1.find('ok')>=0:
-				print("Do break")
+			else:
+				print(data1, addr1)
+			if data1_str.find('connected') >= 0:
+				self.connected = True
 				break
-			self.sock.sendto(b'connect', (self.IPP2P, self.PORTP2P))
-		print("Da Break")
-		
-		########## TIEN HANH DUNG TURN ####################
-
-		data_turn, addr_turn = self.sock.recvfrom(1024)
-		print(data_turn, addr_turn)
-		data_turn_str = data_turn.decode('utf-8')
-
-		data_list_turn = eval(data_turn_str)
-
-		ip_turn, port_turn = data_list_turn[0], data_list_turn[1]
-		self.sock.sendto(b'server connect turn', (ip_turn, port_turn))
-		############################################################
-		data_turn_recv, addr_turn_recv = self.sock.recvfrom(1024)
-		print(data_turn_recv, addr_turn_recv)
-		data_turn_recv_str = data_turn_recv.decode('utf-8')
-
-		data_list_recv_turn = eval(data_turn_recv_str)
-
-		ip_turn_recv, port_turn_recv = data_list_recv_turn[0], data_list_recv_turn[1]
-		self.sock.sendto(b'server connect to recv', (ip_turn_recv, port_turn_recv))
-		temp = 0
 		while True:
-			data_turn_recv, addr_turn_recv = self.sock.recvfrom(1024)
-			data_turn_recv_str = data_turn_recv.decode('utf-8')
-			if data_turn_recv_str.find('connected') >= 0:
-				temp = temp + 1
-				if temp == 2:
-					while True:
-						self.sock.sendto(b't la server', (ip_turn, port_turn))
-						data, addr = self.sock.recvfrom(1024)
-						print(data, addr)
-						print("turn server")
-						data_str = data.decode('utf-8')
-						if data_str == 'close':
+			if self.connected:
+				print("Da ket noi thanh cong" )
+				print(self.IPP2P, self.PORTP2P)
+				break
+			else:
+
+				# sock.sendto(b'turn', ('103.151.241.66', 55554))
+				data_turn, addr_turn = self.sock.recvfrom(1024)
+				print(data_turn, addr_turn)
+				data_turn_str = data_turn.decode('utf-8')
+
+				data_list_turn = eval(data_turn_str)
+				self.IPP2P, self.PORTP2P = data_list_turn[0], data_list_turn[1]
+				ip_turn, port_turn = data_list_turn[0], data_list_turn[1]
+				self.sock.sendto(b'server connect turn', (ip_turn, port_turn))
+				
+				############################################################
+				data_turn_recv, addr_turn_recv = self.sock.recvfrom(1024)
+				print(data_turn_recv, addr_turn_recv)
+				data_turn_recv_str = data_turn_recv.decode('utf-8')
+
+				data_list_recv_turn = eval(data_turn_recv_str)
+
+				ip_turn_recv, port_turn_recv = data_list_recv_turn[0], data_list_recv_turn[1]
+				self.sock.sendto(b'server connect to recv', (ip_turn_recv, port_turn_recv))
+				temp = 0
+				while True:
+					data_turn_recv, addr_turn_recv = self.sock.recvfrom(1024)
+					data_turn_recv_str = data_turn_recv.decode('utf-8')
+					if data_turn_recv_str.find('connected') >= 0:
+						temp = temp + 1
+						if temp == 2:
+							self.connected = True
 							break
+		while True:
+			data = self.sock.recv(256)  ###
+			self.clientInfo['rtpSocket'] = [self.sock]
+			print("recvRtspRequest 4")
+			if data:
+				print ('-'*60 + "\nData received:\n" + '-'*60)
+				self.processRtspRequest(data)
 
 	def processRtspRequest(self, data):
 		"""Process RTSP request sent from the client."""
@@ -250,8 +260,8 @@ class ServerWorker:
 
 def send_large_data_via_udp(data, udp_socket, remote_address, max_packet_size=60000):
     data_length = len(data)
-    print("data_length: " + str(data_length))
+    print (remote_address)
+    #print("data_length: " + str(data_length))
     for i in range(0, data_length, max_packet_size):
         chunk = data[i:i + max_packet_size]
         udp_socket.sendto(chunk, remote_address)
-        data3, addr3 = udp_socket.sendto(chunk, remote_address)
