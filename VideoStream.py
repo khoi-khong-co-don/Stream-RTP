@@ -1,3 +1,72 @@
+# import time
+# from PIL import Image
+# import subprocess as sp
+# import io
+# import cv2
+# import ffmpeg
+# import numpy
+
+
+# class VideoStream:
+#     def __init__(self, rtsp_url):
+#         # self.rtsp_url = rtsp_url
+#         # self.cap = cv2.VideoCapture(rtsp_url)
+#         # self.proc = (
+#         #     ffmpeg.input(rtsp_url, {"rtsp_transport": "tcp"})
+#         #     .output('pipe:', format='rawvideo', pix_fmt='rgb24')
+#         #     .overwrite_output()
+#         #     .run_async(pipe_stdout=True)
+#         # )
+#         self.frameNum = 0
+#         command = [
+#             'ffmpeg',
+#             '-i', 'rtsp://admin:Oryza@123@192.168.111.6:5546/cam/realmonitor?channel=1&subtype=0&unicast=true&proto=Onvif',
+#             '-f', 'image2pipe',
+#             '-pix_fmt', 'rgb24',
+#             '-vcodec', 'rawvideo', '-',
+#             '-preset', 'veryslow',
+#             '-crf', '18',
+#             '-vf', 'scale=640:480',
+#         ]
+
+#         self.pipe = sp.Popen(command, stdout=sp.PIPE, bufsize=10**8)
+
+#     # def nextFrame(self):
+#     #     in_bytes = self.process1.stdout.read(self.width * self.height * 3)
+
+#     #     if in_bytes:
+#     #         return Image.frombytes(
+#     #             'RGB',
+#     #             (self.width, self.height),
+#     #             in_bytes,
+#     #             'raw',
+#     #             'RGB',
+#     #             )
+           
+
+#     def nextFrame(self, jpeg_quality=80):
+#         raw_image = self.pipe.stdout.read(640*480*3)
+#     # print(f"Size of raw_image: {len(raw_image)} bytes")
+#         image = numpy.fromstring(raw_image, dtype='uint8')
+#         image = image.reshape((480,640,3))
+
+#         _, image_bytes = cv2.imencode('.jpg', image)
+#         return image_bytes.tobytes()
+
+
+#     def frameNbr(self):
+#         """Get frame number."""
+#         return self.frameNum
+    
+
+
+# if __name__ == "__main__":
+#     # Create a VideoStream object and call nextFrame method to get the frame  
+#     # data from the camera
+#     vs = VideoStream('rtsp://admin:Oryza@123@192.168.111.6:5546/cam/realmonitor?channel=1&subtype=0&unicast=true&proto=Onvif')
+#     vs.nextFrame()
+
+
 import time
 from PIL import Image
 import io
@@ -56,8 +125,8 @@ class VideoStream:
     
 
 
-if __name__ == "__main__":
-    # Create a VideoStream object and call nextFrame method to get the frame  
-    # data from the camera
-    vs = VideoStream('rtsp://admin:Oryza@123@192.168.111.6:5546/cam/realmonitor?channel=1&subtype=0&unicast=true&proto=Onvif')
-    vs.nextFrame()
+# if __name__ == "__main__":
+#     # Create a VideoStream object and call nextFrame method to get the frame  
+#     # data from the camera
+#     vs = VideoStream('rtsp://admin:Oryza@123@192.168.111.6:5546/cam/realmonitor?channel=1&subtype=0&unicast=true&proto=Onvif')
+#     vs.nextFrame()

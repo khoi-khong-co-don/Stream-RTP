@@ -28,7 +28,7 @@ class ServerWorker:
 	IPP2P = ""
 	PORTP2P = 0
 
-	HOST = '192.168.111.90'
+	HOST = '192.168.111.65'
 	# HOST = '192.168.43.25'
 
 	PORT = 12345
@@ -41,6 +41,7 @@ class ServerWorker:
 
 
 	def run(self):
+		self.PORT = self.clientInfo['portRTP']
 		threading.Thread(target=self.recvRtspRequest).start()
 
 	def recvRtspRequest(self):
@@ -58,18 +59,19 @@ class ServerWorker:
 		while True:
 			self.sock.sendto(b'connect to RTP client', (self.IPP2P, self.PORTP2P))
 			data1, addr1 = self.sock.recvfrom(1024)
+			print(data1, addr1)
 			data1_str = data1.decode('utf-8')
 			if data1_str.find('turn')>=0:
 				break
 			else:
-				print(data1, addr1)
+				print("STUN thanh cong")
 			if data1_str.find('connected') >= 0:
 				self.connected = True
 				break
 		while True:
 			if self.connected:
 				print("Da ket noi thanh cong" )
-				print(self.IPP2P, self.PORTP2P)
+				# print(self.IPP2P, self.PORTP2P)
 				break
 			else:
 
@@ -86,15 +88,21 @@ class ServerWorker:
 				############################################################
 				data_turn_recv, addr_turn_recv = self.sock.recvfrom(1024)
 				print(data_turn_recv, addr_turn_recv)
+				print("===============")
 				data_turn_recv_str = data_turn_recv.decode('utf-8')
-
+				print(data_turn_recv_str)
+				print("===============")
 				data_list_recv_turn = eval(data_turn_recv_str)
-
+				print(data_list_recv_turn)
+				print("===============")
 				ip_turn_recv, port_turn_recv = data_list_recv_turn[0], data_list_recv_turn[1]
+				print("server connect to recv " , ip_turn_recv, port_turn_recv)
+				print("===============")
 				self.sock.sendto(b'server connect to recv', (ip_turn_recv, port_turn_recv))
 				temp = 0
 				while True:
 					data_turn_recv, addr_turn_recv = self.sock.recvfrom(1024)
+					print(data_turn_recv, addr_turn_recv)
 					data_turn_recv_str = data_turn_recv.decode('utf-8')
 					if data_turn_recv_str.find('connected') >= 0:
 						temp = temp + 1
@@ -104,9 +112,9 @@ class ServerWorker:
 		while True:
 			data = self.sock.recv(256)  ###
 			self.clientInfo['rtpSocket'] = [self.sock]
-			print("recvRtspRequest 4")
+			# print("recvRtspRequest 4")
 			if data:
-				print ('-'*60 + "\nData received:\n" + '-'*60)
+				# print ('-'*60 + "\nData received:\n" + '-'*60)
 				self.processRtspRequest(data)
 
 	def processRtspRequest(self, data):
@@ -126,7 +134,7 @@ class ServerWorker:
 		if requestType == self.SETUP:
 			if self.state == self.INIT:
 				# Update state
-				print ("SETUP Request received\n")
+				# print ("SETUP Request received\n")
 
 				try:
 
@@ -141,22 +149,22 @@ class ServerWorker:
 
 				# Send RTSP reply
 				self.replyRtsp(self.OK_200, seq[0])  #seq[0] the sequenceNum received from Client.py
-				print ("sequenceNum is " + seq[0])
+				# print ("sequenceNum is " + seq[0])
 				# Get the RTP/UDP port from the last line
 				self.clientInfo['rtpPort'] = request[2].split(' ')[3]
-				print ('-'*60 + "\nrtpPort is :" + self.clientInfo['rtpPort'] + "\n" + '-'*60)
-				print ("filename is " + filename)
+				# print ('-'*60 + "\nrtpPort is :" + self.clientInfo['rtpPort'] + "\n" + '-'*60)
+				# print ("filename is " + filename)
 
 		# Process PLAY request
 		elif requestType == self.PLAY:
 			if self.state == self.READY:
-				print ('-'*60 + "\nPLAY Request Received\n" + '-'*60)
+				# print ('-'*60 + "\nPLAY Request Received\n" + '-'*60)
 				self.state = self.PLAYING
 
 				# Create a new socket for RTP/UDP
 
 				self.replyRtsp(self.OK_200, seq[0])
-				print ('-'*60 + "\nSequence Number ("+ seq[0] + ")\nReplied to client\n" + '-'*60)
+				# print ('-'*60 + "\nSequence Number ("+ seq[0] + ")\nReplied to client\n" + '-'*60)
 
 				# Create a new thread and start sending RTP packets
 				self.clientInfo['event'] = threading.Event()
@@ -165,13 +173,13 @@ class ServerWorker:
                 
 		# Process RESUME request
 			elif self.state == self.PAUSE:
-				print ('-'*60 + "\nRESUME Request Received\n" + '-'*60)
+				# print ('-'*60 + "\nRESUME Request Received\n" + '-'*60)
 				self.state = self.PLAYING
 
 		# Process PAUSE request
 		elif requestType == self.PAUSE:
 			if self.state == self.PLAYING:
-				print ('-'*60 + "\nPAUSE Request Received\n" + '-'*60)
+				# print ('-'*60 + "\nPAUSE Request Received\n" + '-'*60)
 				self.state = self.READY
 
 				self.clientInfo['event'].set()
@@ -180,7 +188,7 @@ class ServerWorker:
 
 		# Process TEARDOWN request
 		elif requestType == self.TEARDOWN:
-			print ('-'*60 + "\nTEARDOWN Request Received\n" + '-'*60)
+			# print ('-'*60 + "\nTEARDOWN Request Received\n" + '-'*60)
 
 			self.clientInfo['event'].set()
 
@@ -260,8 +268,9 @@ class ServerWorker:
 
 def send_large_data_via_udp(data, udp_socket, remote_address, max_packet_size=60000):
     data_length = len(data)
-    print (remote_address)
-    #print("data_length: " + str(data_length))
+    # print (remote_address)
+    # print("data_length: " + str(data_length))
+    
     for i in range(0, data_length, max_packet_size):
         chunk = data[i:i + max_packet_size]
         udp_socket.sendto(chunk, remote_address)

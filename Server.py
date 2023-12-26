@@ -1,6 +1,7 @@
 import socket
 
 from ServerWorker import ServerWorker
+import multiprocessing
 
 
 class Server:
@@ -28,9 +29,13 @@ class Server:
 
 		# Receive client info (address,port) through RTSP/TCP session
 			# clientInfo['rtspSocket'] = rtspSocket.accept()   # this accept {SockID,tuple object},tuple object = {clinet_addr,intNum}!!!
-		clientInfo = {}
-		ServerWorker(clientInfo).run()
+		for i in range(4):
 
+			clientInfo= {}
+			clientInfo['portRTP'] = 12345 + i
+			device = ServerWorker(clientInfo)
+			process_live = multiprocessing.Process(target=device.run)
+			process_live.start()
 
 # Program Start Point
 if __name__ == "__main__":
