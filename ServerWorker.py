@@ -74,10 +74,10 @@ class ServerWorker:
 				# print(self.IPP2P, self.PORTP2P)
 				break
 			else:
-
+				temp = 0
 				# sock.sendto(b'turn', ('103.151.241.66', 55554))
 				data_turn, addr_turn = self.sock.recvfrom(1024)
-				print(data_turn, addr_turn)
+				print("data_turn ", data_turn, addr_turn)
 				data_turn_str = data_turn.decode('utf-8')
 
 				data_list_turn = eval(data_turn_str)
@@ -90,16 +90,20 @@ class ServerWorker:
 				print(data_turn_recv, addr_turn_recv)
 				print("===============")
 				data_turn_recv_str = data_turn_recv.decode('utf-8')
-				print(data_turn_recv_str)
+				if data_turn_recv_str.find('connected') >= 0:
+					temp = temp + 1
+					data_turn_recv, addr_turn_recv = self.sock.recvfrom(1024)
+					data_turn_recv_str = data_turn_recv.decode('utf-8')
+				
+				print("data_turn_recv_str ", data_turn_recv_str)
 				print("===============")
 				data_list_recv_turn = eval(data_turn_recv_str)
-				print(data_list_recv_turn)
+				print("data_list_recv_turn ", data_list_recv_turn)
 				print("===============")
 				ip_turn_recv, port_turn_recv = data_list_recv_turn[0], data_list_recv_turn[1]
 				print("server connect to recv " , ip_turn_recv, port_turn_recv)
 				print("===============")
 				self.sock.sendto(b'server connect to recv', (ip_turn_recv, port_turn_recv))
-				temp = 0
 				while True:
 					data_turn_recv, addr_turn_recv = self.sock.recvfrom(1024)
 					print(data_turn_recv, addr_turn_recv)
@@ -107,6 +111,7 @@ class ServerWorker:
 					if data_turn_recv_str.find('connected') >= 0:
 						temp = temp + 1
 						if temp == 2:
+							print ("Connected to RTP client")
 							self.connected = True
 							break
 		while True:
@@ -114,7 +119,8 @@ class ServerWorker:
 			self.clientInfo['rtpSocket'] = [self.sock]
 			# print("recvRtspRequest 4")
 			if data:
-				# print ('-'*60 + "\nData received:\n" + '-'*60)
+				print ('-'*60 + "\nData received:\n" + '-'*60)
+				print (data.decode('utf-8'))
 				self.processRtspRequest(data)
 
 	def processRtspRequest(self, data):

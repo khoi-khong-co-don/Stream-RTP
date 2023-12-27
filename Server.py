@@ -29,7 +29,7 @@ class Server:
 
 		# Receive client info (address,port) through RTSP/TCP session
 			# clientInfo['rtspSocket'] = rtspSocket.accept()   # this accept {SockID,tuple object},tuple object = {clinet_addr,intNum}!!!
-		for i in range(4):
+		for i in range(8):
 
 			clientInfo= {}
 			clientInfo['portRTP'] = 12345 + i

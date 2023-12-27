@@ -76,6 +76,10 @@ class VideoStream:
     def __init__(self, rtsp_url):
         self.rtsp_url = rtsp_url
         self.cap = cv2.VideoCapture(rtsp_url)
+        if self.cap.isOpened():
+            print("Kết nối RTSP đã mở thành công.")
+        else:
+            print("Không thể mở kết nối RTSP. Kiểm tra đường dẫn và trạng thái camera.")
         # self.proc = (
         #     ffmpeg.input(rtsp_url, f='rtsp')
         #     .output('pipe:', format='rawvideo', pix_fmt='rgb24')
